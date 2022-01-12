@@ -249,27 +249,7 @@ void setup()
     Serial.println(c, HEX);
     while(1) ; // Loop forever if communication doesn't happen
   }
-}
 
-void loop()
-{  
-  if(Serial.available() > 0){
-    incomingCommand = Serial.readString();
-    incomingCommand.trim();
-
-    switch(incomingCommand){
-      case "calibrate" : 
-      calibrate();
-      break;
-      
-      case "getRollPitchYaw":
-      getRollPitchYaw();
-      break;
-    }
-  }
-}
-
-void calibrate(){
   
     getAres();
     getGres();
@@ -304,6 +284,24 @@ void calibrate(){
     Serial.println();
     delay(1000); 
   
+}
+
+void loop()
+{  
+  if(Serial.available() > 0){
+    String incomingCommand = Serial.readString();
+    incomingCommand.trim();
+    Serial.print(incomingCommand);
+      if (incomingCommand == "calibrate") {
+      calibrate();
+      }else if (incomingCommand == "getRollPitchYaw"){
+      getRollPitchYaw();
+      }
+  }
+}
+
+void calibrate(){
+  
     // Get magnetometer calibration from AK8963 ROM
     initAK8963(magCalibration); Serial.println(F("AK8963 initialized for active data mode....")); // Initialize device for active mode read of magnetometer
     Serial.println();
@@ -325,10 +323,15 @@ void calibrate(){
     Serial.println(F("AK8963 mag scale (mG)"));
     Serial.print("magScale[0]= ");Serial.print(magScale[0]);Serial.print(",");Serial.print("magScale[1]= ");Serial.print(magScale[1]);Serial.print(",");Serial.print("magScale[2]= "); Serial.println(magScale[2]); 
     delay(2000); // add delay to see results before serial spew of data 
-    Serial.print("done");
+    Serial.println("done");
 }
 
 void getRollPitchYaw(){
+
+  String command = "";
+  while (command != "stop"){ 
+    command = Serial.readString();
+    
   // If intPin goes high, all data registers have new data
   if (readByte(MPU9250_ADDRESS, INT_STATUS) & 0x01) {  // On interrupt, check if data ready interrupt
     readAccelData(accelCount);  // Read the x/y/z adc values
@@ -377,6 +380,7 @@ void getRollPitchYaw(){
   
       if(SerialDebug)
       {
+        Serial.print("ypr , ");
         Serial.print(yaw,2);
         Serial.print(" , ");
         Serial.print("pitch: ");
@@ -390,7 +394,7 @@ void getRollPitchYaw(){
       sumCount = 0;
       sum = 0;    
   }
-    
+  }
 }
 
 //===================================================================================================================
